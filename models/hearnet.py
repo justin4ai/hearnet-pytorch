@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class HearNet():
     
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels = 6, out_channels = 3):
         super(HearNet, self).__init__()
 
         # Contracting path
@@ -48,29 +48,32 @@ class HearNet():
         - torch.Tensor: The output of the network.
         """
         # Contracting path
-        enc1 = self.encoder1(yhat_st, h_error)
+
+        hearnet_stackedinput = torch.stack([yhat_st, h_error], dim=1)
+
+        enc1 = self.encoder1(hearnet_stackedinput)
         enc2 = self.encoder2(F.max_pool2d(enc1, 2))
         enc3 = self.encoder3(F.max_pool2d(enc2, 2))
         enc4 = self.encoder4(F.max_pool2d(enc3, 2))
 
         # Bottleneck
-        bottleneck = self.bottleneck(F.max_pool2d(enc4, 2))
+        bottleneck = self.bottleneck(F.max_pool2d(enc4, 2)) #  #(channel) = 1024
 
         # Expansive path
         dec4 = F.interpolate(bottleneck, scale_factor=2, mode='bilinear', align_corners=True)
-        dec4 = torch.cat([enc4, dec4], 1)
+        dec4 = torch.cat([enc4, dec4], 1) # skip connection
         dec4 = self.decoder4(dec4)
 
         dec3 = F.interpolate(dec4, scale_factor=2, mode='bilinear', align_corners=True)
-        dec3 = torch.cat([enc3, dec3], 1)
+        dec3 = torch.cat([enc3, dec3], 1) # skip connection
         dec3 = self.decoder3(dec3)
 
         dec2 = F.interpolate(dec3, scale_factor=2, mode='bilinear', align_corners=True)
-        dec2 = torch.cat([enc2, dec2], 1)
+        dec2 = torch.cat([enc2, dec2], 1) # skip connection
         dec2 = self.decoder2(dec2)
 
         dec1 = F.interpolate(dec2, scale_factor=2, mode='bilinear', align_corners=True)
-        dec1 = torch.cat([enc1, dec1], 1)
+        dec1 = torch.cat([enc1, dec1], 1) # skip connection
         dec1 = self.decoder1(dec1)
 
         # Final layer

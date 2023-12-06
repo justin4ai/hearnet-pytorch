@@ -7,15 +7,42 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+import torch
+from torch.utils.data import Dataset, DataLoader
+
+class MyDataset(Dataset):
+    def __init__(self, yhat_st_collection, h_error_collection, batch_size):
+        '''
+        yhat_st_collection : 
+        h_error_collection : 
+        '''
+        self.yhat_st_collection = yhat_st_collection
+        self.h_error_collection = h_error_collection
+        self.batch_size = batch_size
+        self.num_samples = len(yhat_st_collection)  # length가 같다고 가정
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, index):
+        start_idx = index * self.batch_size
+        end_idx = (index + 1) * self.batch_size
+
+        yhat_st_batch = self.yhat_st_collection[start_idx:end_idx]
+        h_error_batch = self.h_error_collection[start_idx:end_idx]
+
+        return yhat_st_batch, h_error_batch
+
 def main(args):
     #torch.backends.cudnn.enabled = False
 
     data_path = args.data_path
+    
 
     current_root_path = os.path.split(sys.argv[0])[0]
 
     # Assuming you have your data loaders (train_loader, val_loader) and the necessary components initialized
-    in_channels = 3
+    in_channels = 6
     out_channels = 3
 
     hear_net = HearNet(in_channels, out_channels)
