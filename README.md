@@ -3,8 +3,8 @@
 Package & module dependencies will be updated.
 
 First step : Implement end-to-end HEAR-Net pytorch code (ongoing)
-- Model (ongoing)
-- Train (ongoing)
+- Model (done)
+- Train (ongoing / almost done)
 - Inference
 
 Second step : Get the best pretrained model
