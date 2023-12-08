@@ -7,7 +7,7 @@ sys.path.append('../arcface_model')
 from arcface_model.iresnet import iresnet100
 
 
-def get_zid(x_s):
+def get_zid(img):
     netArc = iresnet100(fp16=False)
     print(os.getcwd())
     netArc.load_state_dict(torch.load('../arcface_model/backbone.pth'))
@@ -16,6 +16,6 @@ def get_zid(x_s):
 
     # get the identity embeddings of X_s
     with torch.no_grad():
-        z_id = netArc(F.interpolate(x_s, [112, 112], mode='bilinear', align_corners=False))
+        z_id = netArc(F.interpolate(img, [112, 112], mode='bilinear', align_corners=False))
 
     return z_id

@@ -98,10 +98,10 @@ def main(args):
             output = hear_net(yhat_st, h_error)
             
             # Compute the loss
-            z_id = get_zid() # Extracted from ghost module
+            z_id_yhat_st = get_zid(yhat_st) # Extracted from ghost module
+            z_id_x_s = get_zid(x_s)
 
-
-            hear_net_loss = HearNetLoss(z_id, output, yhat_st, x_s, x_t) # output argument goes to y_st parameter
+            hear_net_loss = HearNetLoss(z_id_yhat_st, z_id_x_s, output, yhat_st, x_s, x_t) # output argument goes to y_st parameter
             loss = hear_net_loss.hearnetLoss()
             
             # Backward pass and optimization
