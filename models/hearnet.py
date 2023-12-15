@@ -22,6 +22,15 @@ class HearNet():
         self.decoder2 = self.conv_block(256, 128)
         self.decoder1 = self.conv_block(128, 64)
 
+        self.unpool4 = nn.ConvTranspose2d(in_channels=1024, out_channelsv=1024,
+                                          kernel_size=2, stride=2, padding=0, bias=True)
+        self.unpool3 = nn.ConvTranspose2d(in_channels=512, out_channels=512,
+                                    kernel_size=2, stride=2, padding=0, bias=True)
+        self.unpool2 = nn.ConvTranspose2d(in_channels=256, out_channels=256,
+                                    kernel_size=2, stride=2, padding=0, bias=True)
+        self.unpool1 = nn.ConvTranspose2d(in_channels=128, out_channels=128,
+                                    kernel_size=2, stride=2, padding=0, bias=True)
+
         # Final layer
         self.final_layer = nn.Conv2d(64, out_channels, kernel_size=1)
 
@@ -60,20 +69,21 @@ class HearNet():
         bottleneck = self.bottleneck(F.max_pool2d(enc4, 2)) #  #(channel) = 1024
 
         # Expansive path
-        dec4 = F.interpolate(bottleneck, scale_factor=2, mode='bilinear', align_corners=True)
-        dec4 = torch.cat([enc4, dec4], 1) # skip connection
+        #dec4 = F.interpolate(bottleneck, scale_factor=2, mode='bilinear', align_corners=True)
+        
+        dec4 = torch.cat([enc4, self.unpool4(bottleneck)], 1) # upsampling and skip connection at once
         dec4 = self.decoder4(dec4)
 
-        dec3 = F.interpolate(dec4, scale_factor=2, mode='bilinear', align_corners=True)
-        dec3 = torch.cat([enc3, dec3], 1) # skip connection
+        #dec3 = F.interpolate(dec4, scale_factor=2, mode='bilinear', align_corners=True)
+        dec3 = torch.cat([enc3, self.unpool3(dec4)], 1) # skip connection
         dec3 = self.decoder3(dec3)
 
-        dec2 = F.interpolate(dec3, scale_factor=2, mode='bilinear', align_corners=True)
-        dec2 = torch.cat([enc2, dec2], 1) # skip connection
+        #dec2 = F.interpolate(dec3, scale_factor=2, mode='bilinear', align_corners=True)
+        dec2 = torch.cat([enc2, self.unpool2(dec3)], 1) # skip connection
         dec2 = self.decoder2(dec2)
 
-        dec1 = F.interpolate(dec2, scale_factor=2, mode='bilinear', align_corners=True)
-        dec1 = torch.cat([enc1, dec1], 1) # skip connection
+        #dec1 = F.interpolate(dec2, scale_factor=2, mode='bilinear', align_corners=True)
+        dec1 = torch.cat([enc1, self.unpool1(dec2)], 1) # skip connection
         dec1 = self.decoder1(dec1)
 
         # Final layer

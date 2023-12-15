@@ -68,8 +68,8 @@ def main(args):
     h_error_collection = ImageFolder(root=h_error_path , transform=transform)
 
     # Data loader defined
-    my_dataset = MyDataset(source_collection, target_collection, yhat_st_collection, h_error_collection, batch_size) # Batch_size? 
-    train_loader = DataLoader(my_dataset, batch_size=batch_size, shuffle=True) # Batch_size?
+    my_dataset = MyDataset(source_collection, target_collection, yhat_st_collection, h_error_collection, batch_size)
+    train_loader = DataLoader(my_dataset, batch_size=batch_size, shuffle=True)
 
     # configs
     batch_size = 100
@@ -104,6 +104,7 @@ def main(args):
             hear_net_loss = HearNetLoss(z_id_yhat_st, z_id_x_s, output, yhat_st, x_s, x_t) # output argument goes to y_st parameter
             loss = hear_net_loss.hearnetLoss()
             
+
             # Backward pass and optimization
             loss.backward()
             optimizer.step()
@@ -128,7 +129,7 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()  
     parser.add_argument("--source_images", default='', help="")
-    parser.add_argument("--target_errors", default='', help="")
+    parser.add_argument("--target_images", default='', help="")
     parser.add_argument("--swapped_images", default='', help="")
     parser.add_argument("--heuristic_errors", default='', help="")
     parser.add_argument("--save_path", default='./checkpoints/hearnet/hear_net.pth', help="")
