@@ -9,25 +9,41 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
+
+sys.path.append('/workspace')
 from processes.getfeatures import get_zid
+
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 
 class MyDataset(Dataset):
     def __init__(self, source_collection, target_collection, yhat_st_collection, h_error_collection, batch_size):
-        '''
-        yhat_st_collection : 
-            - This stands for the collection of yhat_st images (swapped by ghost)
-            - Shape of (10000(= example, total #(images)), 3(= #(channel)), 256(= width), 256(= height))
-        h_error_collection :
-            - This stands for the collection of heuristic errors
-            - Shape of (10000(= example, total #(images)), 3(= #(channel)), 256(= width), 256(= height))
-        '''
-        self.source_collection = source_collection
-        self.target_collection = target_collection
-        self.yhat_st_collection = yhat_st_collection
-        self.h_error_collection = h_error_collection
+
+        src_iter, tgt_iter, swapped_iter, heuristic_iter = iter(source_collection), iter(target_collection), iter(yhat_st_collection), iter(h_error_collection)
+        
+        srcList, tgtList, swappedList, heuristicList = [], [], [], []
+
+        while True:
+            try :
+                src, tgt, swapped, heuristic = next(src_iter)[0], next(tgt_iter)[0], next(swapped_iter)[0], next(heuristic_iter)[0]
+                srcList.append(src)
+                tgtList.append(tgt)
+                swappedList.append(swapped)
+                heuristicList.append(heuristic)
+
+            except StopIteration:
+                break
+        #self.source_collection = iter(source_collection)
+        self.source_collection = torch.cat(srcList, dim=0)
+        print(self.source_collection.shape)
+        self.target_collection = torch.cat(tgtList, dim=0)
+        self.yhat_st_collection = torch.cat(swappedList, dim=0)
+        self.h_error_collection = torch.cat(heuristicList, dim=0)
+        #self.source_collection = source_collection
+        # self.target_collection = target_collection
+        # self.yhat_st_collection = yhat_st_collection
+        # self.h_error_collection = h_error_collection
         self.batch_size = batch_size
         self.num_samples = len(yhat_st_collection)  # Assume all the legnths are equal
 
@@ -37,8 +53,11 @@ class MyDataset(Dataset):
     def __getitem__(self, index):
         start_idx = index * self.batch_size
         end_idx = (index + 1) * self.batch_size
-
+        print("No prob")
+        #print(type(self.source_collection))
+        #print(next(self.source_collection)[0].shape)
         source_batch = self.source_collection[start_idx:end_idx]
+        print("No prob2")
         target_batch = self.target_collection[start_idx:end_idx]
         yhat_st_batch = self.yhat_st_collection[start_idx:end_idx]
         h_error_batch = self.h_error_collection[start_idx:end_idx]
@@ -53,8 +72,10 @@ def main(args):
     source_path = args.source_images # Assuming (10000 x 3 x 256 x 256)
     target_path = args.target_images # Assuming (10000 x 3 x 256 x 256)
     yhat_st_path = args.swapped_images # Assuming (10000 x 3 x 256 x 256)
-    h_error_path = args.heuristic_error # Assuming (10000 x 3 x 256 x 256)
+    h_error_path = args.heuristic_errors # Assuming (10000 x 3 x 256 x 256)
     
+
+
     # Transform function defined
     transform = transforms.Compose([
         transforms.Resize((256, 256)),  # Image resize just in case
@@ -67,15 +88,20 @@ def main(args):
     yhat_st_collection = ImageFolder(root=yhat_st_path, transform=transform)
     h_error_collection = ImageFolder(root=h_error_path , transform=transform)
 
+    print(source_collection.classes)
+    print(source_collection.class_to_idx)
+
+    # configs
+    batch_size = 2
+    in_channels = 6
+    out_channels = 3
+    num_epochs = 10 
+
     # Data loader defined
     my_dataset = MyDataset(source_collection, target_collection, yhat_st_collection, h_error_collection, batch_size)
     train_loader = DataLoader(my_dataset, batch_size=batch_size, shuffle=True)
 
-    # configs
-    batch_size = 100
-    in_channels = 6
-    out_channels = 3
-    num_epochs = 10 
+
 
     # Model object created
     hear_net = HearNet(in_channels, out_channels)
@@ -86,8 +112,15 @@ def main(args):
         hear_net.train()
         
         for batch_idx, (x_s, x_t, yhat_st, h_error) in enumerate(train_loader): # with batch size
+            print("Reaching this line successfully"
+            )
             optimizer.zero_grad()
             
+            print(f"first shape : {x_s.shape}")
+
+            print(f"second shape : {x_t.shape}")
+            print(f"third shape : {yhat_st.shape}")
+            print(f"fourth shape : {h_error.shape}")
             # Move to GPU
             x_s = x_s.to(device)
             x_t = x_t.to(device)
@@ -128,10 +161,10 @@ def main(args):
 if __name__ == '__main__':
 
     parser = ArgumentParser()  
-    parser.add_argument("--source_images", default='', help="")
-    parser.add_argument("--target_images", default='', help="")
-    parser.add_argument("--swapped_images", default='', help="")
-    parser.add_argument("--heuristic_errors", default='', help="")
+    parser.add_argument("--source_images", default='./data/source', help="")
+    parser.add_argument("--target_images", default='./data/target', help="")
+    parser.add_argument("--swapped_images", default='./data/swapped', help="")
+    parser.add_argument("--heuristic_errors", default='./data/heuristic', help="")
     parser.add_argument("--save_path", default='./checkpoints/hearnet/hear_net.pth', help="")
     
     parser.add_argument("--cpu", default=False)

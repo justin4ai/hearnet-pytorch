@@ -2,12 +2,14 @@ import torch
 import torch.nn.functional as F
 import os
 import sys
-sys.path.append('../arcface_model')
+sys.path.append('/../arcface_model')
 
+print(sys.path)
 from arcface_model.iresnet import iresnet100
 
 
 def get_zid(img):
+    # Is input size 256 or 224? 일단 모두 256으로 가정
     netArc = iresnet100(fp16=False)
     print(os.getcwd())
     netArc.load_state_dict(torch.load('../arcface_model/backbone.pth'))

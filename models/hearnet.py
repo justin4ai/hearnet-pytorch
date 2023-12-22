@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class HearNet():
+class HearNet(nn.Module):
     
     def __init__(self, in_channels = 6, out_channels = 3):
         super(HearNet, self).__init__()
@@ -22,7 +22,7 @@ class HearNet():
         self.decoder2 = self.conv_block(256, 128)
         self.decoder1 = self.conv_block(128, 64)
 
-        self.unpool4 = nn.ConvTranspose2d(in_channels=1024, out_channelsv=1024,
+        self.unpool4 = nn.ConvTranspose2d(in_channels=1024, out_channels=1024,
                                           kernel_size=2, stride=2, padding=0, bias=True)
         self.unpool3 = nn.ConvTranspose2d(in_channels=512, out_channels=512,
                                     kernel_size=2, stride=2, padding=0, bias=True)
