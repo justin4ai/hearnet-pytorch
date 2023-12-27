@@ -51,16 +51,16 @@ class MyDataset(Dataset):
         return self.num_samples
 
     def __getitem__(self, index):
-        start_idx = index * self.batch_size
-        end_idx = (index + 1) * self.batch_size
-        print("No prob")
+        #start_idx = index * self.batch_size
+        #end_idx = (index + 1) * self.batch_size
+        #print("No prob")
         #print(type(self.source_collection))
         #print(next(self.source_collection)[0].shape)
-        source_batch = self.source_collection[start_idx:end_idx]
-        print("No prob2")
-        target_batch = self.target_collection[start_idx:end_idx]
-        yhat_st_batch = self.yhat_st_collection[start_idx:end_idx]
-        h_error_batch = self.h_error_collection[start_idx:end_idx]
+        source_batch = self.source_collection[index]
+        #print("No prob2")
+        target_batch = self.target_collection[index]
+        yhat_st_batch = self.yhat_st_collection[index]
+        h_error_batch = self.h_error_collection[index]
 
         return source_batch, target_batch, yhat_st_batch, h_error_batch
 
