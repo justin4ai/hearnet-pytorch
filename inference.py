@@ -24,7 +24,10 @@ def main(args):
         
         output = model()
         save_image(output , args.save_path)
-        return model()
+
+        
+
+        return 
 
 if __name__ == '__main__':
 

@@ -11,7 +11,8 @@ RUN apt-get -y install \
     libxext6 \
     libxrender-dev \
     build-essential \
-    pkg-config
+    pkg-config \
+
 # install requirements
 WORKDIR /workspace
 

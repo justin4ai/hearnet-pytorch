@@ -2,3 +2,8 @@
 
 # Ignore .pth files
 *.pth
+runs
+losses/__pycache__
+models/__pycache__
+checkpoints
+datasets

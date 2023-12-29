@@ -1,1 +1,36 @@
-// Empty yet
+{
+	"name": "hearnet", // Docker container 이름을 짓자. 어지간하면 folder명이랑 통일
+	"build": {
+		"dockerfile": "../Dockerfile",
+		"context": ".."
+	},
+	// "forwardPorts": [8888],
+	"runArgs": [
+		// GPU 사용을 위한 옵션(nvidia 관련 설정 필요)
+		"--gpus", "all",
+		// GUI 사용을 원할 때 사용하는 옵션(X11 설치 필요, 설치 안했으면 없애도 된다)
+		"-e", "DISPLAY=192.168.125.24:0",
+		"-v", "/tmp/.X11-unix:/tmp/.X11-unix",
+		// 컨테이너의 이름을 짓는 옵션
+		"--name", "hearnet", // 여기서도 name을 똑같이 바꿔주자.
+		// 사용자가 멈추지 않았는데 꺼진 경우 다시 켜주는 옵션
+		"--restart=unless-stopped"
+	],
+	// volumn mount를 위해 사용하는 옵션
+	// ${localWorkspaceFolder}의 경우 $(pwd)와 같은 의미
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+	// 컨테이너 내 WORKDIR 설정 해주는 옵션
+	"workspaceFolder": "/workspace", // Dockerfile에서 이것을 위해 WORKDIR를 설정했다.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			},
+			// VSCode Extension을 Docker Container에 자동으로 깔아주는 옵션
+			"extensions": [
+				"ms-python.python",
+                "ms-toolsai.jupyter"
+			]
+		}
+	}
+}

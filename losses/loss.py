@@ -12,27 +12,25 @@ class HearNetLoss():
         self.x_s = x_s
         self.x_t = x_t
         self.same = same
-
+        
         self.l1 = nn.L1Loss()
         self.l2 = nn.MSELoss()
 
 
     def idLoss(self):
-        inner_product = (torch.matmul(self.z_id_yhat_st.view(-1, 1, 512), self.z_id_x_s.view(-1, 1, 512)).squeeze()) # -1 stands for batch size / Being batch fixed, matrix multiplication
-        return self.l1(torch.ones_like(inner_product), inner_product)
+
+        #print("innerproduct shape before squeeze :", torch.mul(self.z_id_yhat_st, self.z_id_x_s).shape)
+        #inner_product = (torch.mul(self.z_id_yhat_st, self.z_id_x_s).squeeze()) # -1 stands for batch size / Being batch fixed, matrix multiplication
+        cos_sim = torch.cosine_similarity(self.z_id_yhat_st, self.z_id_x_s, dim=1)
+        #print("innerproduct shape :", inner_product.shape)
+        return self.l1(torch.ones_like(cos_sim), cos_sim)
     
     def chgLoss(self):
         return self.l1(self.yhat_st, self.y_st)
     
     def recLoss(self):
-        '''
-        same : Having (batch_size) shape (1 dimensional). Represents whether source and target are the same (binary). 
-        '''
-        self.same = self.same.unsqueeze(-1).unsqueeze(-1) # Becomes 4 dimesional from 2 dimensional tensor
-        self.same = self.same.expand(self.x_t.shape) # Assuming x_t and y_st have the same shape. Becomes one_likes or zero_likes.
-        self.x_t = torch.mul(self.x_t, self.same) # Being batch and channel fixed, matrix multiplication
-        self.y_st = torch.mul(self.y_st, self.same) # Being batch and channel fixed, matrix multiplication
-        return 0.5 * self.l2(self.x_t, self.y_st)
+        L_rec = torch.sum(0.5 * torch.mean(torch.pow(self.y_st - self.x_t, 2).reshape(self.y_st.shape[0], -1), dim=1) * self.same ) / (self.same.sum() + 1e-6)
+        return L_rec
     
     def hearnetLoss(self):
         return self.idLoss() + self.chgLoss() + self.recLoss() # Coefficients are all zeros in the paper

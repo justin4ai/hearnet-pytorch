@@ -22,13 +22,13 @@ class HearNet(nn.Module):
         self.decoder2 = self.conv_block(256, 128)
         self.decoder1 = self.conv_block(128, 64)
 
-        self.unpool4 = nn.ConvTranspose2d(in_channels=1024, out_channels=1024,
+        self.unpool4 = nn.ConvTranspose2d(in_channels=1024, out_channels=512,
                                           kernel_size=2, stride=2, padding=0, bias=True)
-        self.unpool3 = nn.ConvTranspose2d(in_channels=512, out_channels=512,
+        self.unpool3 = nn.ConvTranspose2d(in_channels=512, out_channels=256,
                                     kernel_size=2, stride=2, padding=0, bias=True)
-        self.unpool2 = nn.ConvTranspose2d(in_channels=256, out_channels=256,
+        self.unpool2 = nn.ConvTranspose2d(in_channels=256, out_channels=128,
                                     kernel_size=2, stride=2, padding=0, bias=True)
-        self.unpool1 = nn.ConvTranspose2d(in_channels=128, out_channels=128,
+        self.unpool1 = nn.ConvTranspose2d(in_channels=128, out_channels=64,
                                     kernel_size=2, stride=2, padding=0, bias=True)
 
         # Final layer
@@ -58,20 +58,24 @@ class HearNet(nn.Module):
         """
         # Contracting path
 
-        hearnet_stackedinput = torch.stack([yhat_st, h_error], dim=1)
+        hearnet_stackedinput = torch.cat([yhat_st, h_error], dim=1)
+        #print("hearnet_stackedinput : ", hearnet_stackedinput.shape)
 
         enc1 = self.encoder1(hearnet_stackedinput)
         enc2 = self.encoder2(F.max_pool2d(enc1, 2))
         enc3 = self.encoder3(F.max_pool2d(enc2, 2))
         enc4 = self.encoder4(F.max_pool2d(enc3, 2))
-
+        
+        #print("enc4_shape : ", enc4.shape)
         # Bottleneck
         bottleneck = self.bottleneck(F.max_pool2d(enc4, 2)) #  #(channel) = 1024
-
+        #print("bottleneck_shape : ", bottleneck.shape)
         # Expansive path
         #dec4 = F.interpolate(bottleneck, scale_factor=2, mode='bilinear', align_corners=True)
         
+        
         dec4 = torch.cat([enc4, self.unpool4(bottleneck)], 1) # upsampling and skip connection at once
+        #print("dec4_shape : ", dec4.shape)
         dec4 = self.decoder4(dec4)
 
         #dec3 = F.interpolate(dec4, scale_factor=2, mode='bilinear', align_corners=True)
@@ -88,8 +92,7 @@ class HearNet(nn.Module):
 
         # Final layer
         output = self.final_layer(dec1)
+        
+        #print("hearnet_output : ",output.shape)
 
         return output
-
-
-
